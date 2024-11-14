@@ -10,10 +10,8 @@ using T_HosCase.Context;
 using T_HosCase.Entities;
 using T_HosCase.Models;
 
-namespace T_HosCase.Areas.Admin.Controllers
+namespace T_HosCase.Controllers
 {
-    [Area("Admin")]
-    [Route("admin/[controller]/[action]")]
     public class UserController : Controller
     {
         private readonly Case_DbContext _context;
@@ -36,15 +34,21 @@ namespace T_HosCase.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Register(RegisterDto model)
         {
-            var user = new User();
-            user.Status = true;
-            user.Email = model.Email;
-            user.Password = model.Password;
-            user.FirstName = model.FirstName;
-            user.LastName = model.LastName;
-            user.HashPassword = HashPassword(model.Password);
-			_context.Add(user);
-            return Redirect("/admin/User/Login");
+			var userControl = _context.Users.Where(x=>x.Status==true && x.Email==model.Email).FirstOrDefault();
+			if (userControl == null)
+			{
+				var user = new User();
+				user.Status = true;
+				user.Email = model.Email;
+				user.Password = model.Password;
+				user.FirstName = model.FirstName;
+				user.LastName = model.LastName;
+				user.HashPassword = HashPassword(model.Password);
+				_context.Add(user);
+				_context.SaveChanges();
+                return Redirect("/User/Login");
+            }
+			return View();
         }
         [HttpPost]
         public IActionResult Login(LoginDto model)
@@ -53,6 +57,7 @@ namespace T_HosCase.Areas.Admin.Controllers
 			
 			if (user is not null)
             {
+				object userv = null;
 				bool isPasswordValid = VerifyPassword(user.HashPassword, model.Password);
 				if (isPasswordValid)
 				{
@@ -92,12 +97,22 @@ namespace T_HosCase.Areas.Admin.Controllers
         }
 		public string HashPassword(string password)
 		{
-			// Şifreyi hashler ve hashlenmiş şifreyi döner
-			return _passwordHasher.HashPassword(null, password);
-		}
+
+            var passwordHasher = new PasswordHasher<object>();
+
+            // Kullanıcı nesnesi (anonim nesne veya kullanıcı sınıfı)
+            object user = null; // Basit bir nesne oluşturabilirsin
+            // Şifreyi hashlemek
+            string hpassword = password;
+            string hashedPassword = passwordHasher.HashPassword(user, password);
+			return hashedPassword;
+
+        }
 		public bool VerifyPassword(string hashedPassword, string password)
 		{
-			var result = _passwordHasher.VerifyHashedPassword(null, hashedPassword, password);
+            var passwordHasher = new PasswordHasher<object>();
+            object user = null;
+            var result = passwordHasher.VerifyHashedPassword(user, hashedPassword, password);
 			return result == PasswordVerificationResult.Success;
 		}
 	}

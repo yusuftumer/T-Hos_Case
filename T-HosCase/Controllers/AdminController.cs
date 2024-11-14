@@ -12,10 +12,8 @@ using T_HosCase.Models.CategoryModels;
 using T_HosCase.Models.ProductModels;
 using T_HosCase.Models.PropertyModels;
 
-namespace T_HosCase.Areas.Admin.Controllers
+namespace T_HosCase.Controllers
 {
-    [Area("Admin")]
-    [Route("admin/[controller]")]
     public class AdminController : Controller
     {
         private readonly Case_DbContext _context;
